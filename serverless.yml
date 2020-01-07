@@ -1,0 +1,64 @@
+service: random
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  region: eu-central-1
+  stage: dev
+  profile: serverless-random
+  environment:
+      VALUE_GENERATED_TOPIC_ARN: !Ref ValueGeneratedTopic
+      GENERATED_VALUES_TABLE_NAME: !Ref GeneratedValuesTable
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - sns:Publish
+      Resource: !Ref ValueGeneratedTopic
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+        - dynamodb:Scan
+      Resource: !GetAtt GeneratedValuesTable.Arn
+
+functions:
+  generateRandomNumber:
+    handler: handler.generateRandomNumber
+    events:
+      - http:
+          method: GET
+          path: generateRandomNumber
+  getGeneratedValues:
+    handler: handler.getGeneratedValues
+    events:
+      - http:
+          method: GET
+          path: getGeneratedValues
+  onValueGenerated:
+    handler: handler.onValueGenerated
+    events:
+      - sns:
+          arn: !Ref ValueGeneratedTopic
+          topicName: value-generated
+
+resources:
+  Resources:
+    ValueGeneratedTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: value-generated
+    GeneratedValuesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: GeneratedValues
+        AttributeDefinitions:
+          - AttributeName: Value
+            AttributeType: N
+        KeySchema:
+          - AttributeName: Value
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+plugins:
+  - serverless-plugin-typescript

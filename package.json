@@ -1,0 +1,14 @@
+{
+  "name": "serverless-random-generator",
+  "version": "1.0.0",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/aws-lambda": "8.10.39",
+    "@types/node": "13.1.4",
+    "serverless-plugin-typescript": "1.1.9",
+    "typescript": "3.7.4"
+  },
+  "dependencies": {
+    "aws-sdk": "2.598.0"
+  }
+}
