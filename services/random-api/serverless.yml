@@ -1,4 +1,4 @@
-service: random
+service: random-api
 
 provider:
   name: aws
