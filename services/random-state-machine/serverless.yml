@@ -1,0 +1,43 @@
+service: random-state-machine
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  region: eu-central-1
+  stage: dev
+  profile: serverless-random
+
+functions:
+  generateRandomNumber:
+    handler: handler.generateRandomNumber
+
+stepFunctions:
+  stateMachines:
+    valueGenerator:
+      definition:
+        StartAt: GenerateRandomNumber
+        States:
+          GenerateRandomNumber:
+            Type: Task
+            Resource: !GetAtt generateRandomNumber.Arn
+            Next: Success
+            Parameters:
+              threshold: 5
+            Retry:
+              - ErrorEquals:
+                  - WrongRandomNumber
+                IntervalSeconds: 5
+                BackoffRate: 1
+                MaxAttempts: 2
+            Catch:
+              - ErrorEquals:
+                  - States.ALL
+                Next: Failed
+          Success:
+            Type: Succeed
+          Failed:
+            Type: Fail
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-step-functions
